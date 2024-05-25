@@ -4,34 +4,37 @@ $username = "root";
 $password = "root123";
 $dbName = "tech";
 $connection = mysqli_connect($server, $username, $password, $dbName);
+$response = array();
+$currentMonth = date("m");
+$currentDay = date("d");
 
 
-class Vacation
-{
-    public $date;
-    public $name;
+if ($connection) {
+    $getHolidaysQuery = "SELECT * FROM HOLIDAYS";
+    $result = mysqli_query($connection, $getHolidaysQuery);
+    if ($result) {
+        $i = 0;
+        while ($row = mysqli_fetch_assoc($result)) {
+            $holidayTokens = explode('-', $row['holidayDate']);
+            $holidayMonth = (int) $holidayTokens[1];
+            $holidayDay = (int) $holidayTokens[2];
 
-    public function __construct($name, $date)
-    {
-        $this->name = $name;
-        $this->date = $date;
-    }
-
-    public function displayInfo()
-    {
-        echo "Name: " . $this->name . ", Age: " . $this->date . "\n";
+            if ($currentMonth <= $holidayMonth) {
+                if ($currentMonth == $holidayMonth) {
+                    if ($currentDay < $holidayDay) {
+                        $response[$i]['holidayDate'] = $row['holidayDate'];
+                        $response[$i]['holidayName'] = $row['holidayName'];
+                        $i++;
+                    }
+                } else {
+                    $response[$i]['holidayDate'] = $row['holidayDate'];
+                    $response[$i]['holidayName'] = $row['holidayName'];
+                    $i++;
+                }
+            }
+        }
     }
 }
-
-$vac1 = new Vacation("holiday_1", "2024-05-10");
-$vac2 = new Vacation("holiday_2", "2024-05-26");
-$vac3 = new Vacation("holiday_3", "2024-05-29");
-$vac4 = new Vacation("holiday_4", "2024-03-31");
-$vac5 = new Vacation("holiday_5", "2024-06-30");
-
-
-$vacations = array($vac1, $vac2, $vac3, $vac4, $vac5);
-
 ?>
 
 <!DOCTYPE html>
@@ -44,12 +47,11 @@ $vacations = array($vac1, $vac2, $vac3, $vac4, $vac5);
 </head>
 
 <body>
-
     <input type="date" list="vacations-dates" />
     <datalist id="vacations-dates">
         <?php
-        for ($i = 0; $i < count($vacations); $i++) {
-            echo "<option value=" . $vacations[$i]->date . " label=" . $vacations[$i]->name . "></option>";
+        for ($i = 0; $i < count($response); $i++) {
+            echo "<option value=". $response[$i]['holidayDate'] ." label=". $response[$i]['holidayName'] ."></option>";
         }
         ?>
     </datalist>
